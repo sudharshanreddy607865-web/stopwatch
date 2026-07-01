@@ -1,0 +1,431 @@
+<html >
+<head>
+<title>Stopwatch</title>
+<style>
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:  #11172a;
+  font-family:Roboto Mono;
+  color: blue;
+  padding: 16px;
+}
+.card {
+  width: 100%;
+   max-width: 420px;
+  background: red;
+  border-radius:20px;
+  padding: 32px 24px 28px;
+
+    }
+
+h1 {
+  text-align: center;
+  margin:20px;
+  font-size: 35;
+  color:white;
+}
+.display {
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  font-size: 50;
+  font-weight: 700; 
+}
+
+.display .colon { color:pink; margin: 0 2px; }
+#centis {
+  font-size:50;
+  color: #ff2bd6;
+  
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+
+.controls {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.btn {
+  border-radius: 16px;
+  padding: 18px 8px;
+  font-size: 20;
+  font-weight: 600; 
+  color:   #e9f1ff;
+  background: #161d33;
+  min-height: 56px;
+
+}
+
+.btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.btn:not(:disabled):hover { transform: translateY(-1px); }
+.btn:not(:disabled):active { transform: translateY(0); }
+
+.btn-primary {
+  background: li near-gradient(135deg, #00f5ff20, #00f5ff10);
+  border:  #00f5ff;
+  color:  #00f5ff;
+  box-shadow: 0 0 14px rgba(0, 245, 255, 0.25);
+}
+.btn-primary:not(:disabled):hover { box-shadow: 0 0 22px rgba(0, 245, 255, 0.45); }
+.btn-primary.is-running {
+  border-color: #ff2bd6;
+  color: #ff2bd6;
+  box-shadow: 0 0 14px rgba(255, 43, 214, 0.3);
+}
+
+.btn-secondary {
+  background: linear-gradient(135deg, #ffffff10, #ffffff05);
+  border: 1px solid #4fd1c5;
+  color: #4fd1c5;
+  box-shadow: 0 0 14px rgba(79, 209, 197, 0.2);
+}
+.btn-secondary:not(:disabled):hover { box-shadow: 0 0 22px rgba(79, 209, 197, 0.4); }
+
+.btn-danger {
+  background: linear-gradient(135deg, #ff385815, #ff385808);
+  border: 1px solid  #ff3860;
+  color:  #ff3860;
+  box-shadow: 0 0 14px rgba(255, 56, 96, 0.2);
+}
+.btn-danger:not(:disabled):hover { box-shadow: 0 0 22px rgba(255, 56, 96, 0.4); }
+
+.shortcuts {
+  text-align: center;
+  font-size: 0.75rem;
+  color: #7c8aa8 ;
+  margin:4px 0 20px;
+}
+
+kbd {
+  background: #1f2740;
+  border: 1px solid #303c5e;
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 20;
+}
+
+
+.laps-section h2 {
+  font-size: 15;
+ 
+  
+  color:  #7c8aa8;
+  margin: 0 0 8px;
+}
+
+.lap-list {
+  
+  max-height: 220px;
+  overflow-y: auto;
+  border-radius: 12px;
+  background: #0d1320;
+  border: 1px solid #1f2740;
+}
+
+.lap-list li {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 14px;
+  font-variant-numeric: tabular-nums;
+  font-size: 18;
+  border-bottom: 1px solid #1a2138;
+}
+
+.lap-list li:last-child { border-bottom: none; }
+.lap-list .lap-index { color: #7c8aa8 ; }
+.lap-list .lap-diff { color:#00f5ff; }
+
+.no-laps {
+  text-align: center;
+  color:blue;
+  font-size: 20;
+  padding: 14px 0 2px;
+}
+
+
+@media (max-width: 360px) {
+  .controls { grid-template-columns: 1fr 1fr; }
+  #resetBtn { grid-column: span 2; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn { transition: none; }
+}
+</style>
+</head>
+<body>
+
+  <main class="card" role="main" aria-labelledby="title">
+    <h1 id="title">STOPWATCH</h1>
+
+    <div class="display" role="timer" aria-live="off" aria-atomic="true" id="display">
+      <span id="minutes">00</span><span class="colon">:</span><span id="seconds">00</span><span class="colon">:</span><span id="centis">00</span>
+    </div>
+    <p class="visually-hidden" id="status" aria-live="polite">Stopwatch stopped at 00:00:00</p>
+
+    <div class="controls" role="group" aria-label="Stopwatch controls">
+      <button id="startPauseBtn" class="btn btn-primary" type="button" aria-label="Start stopwatch">
+        Start
+      </button>
+      <button id="lapBtn" class="btn btn-secondary" type="button" aria-label="Record lap" disabled>
+        Lap
+      </button>
+      <button id="resetBtn" class="btn btn-danger" type="button" aria-label="Reset stopwatch">
+        Reset
+      </button>
+    </div>
+
+    <p class="shortcuts">
+      <kbd>Space</kbd> Start/Pause &nbsp; <kbd>L</kbd> Lap &nbsp; <kbd>R</kbd> Reset
+    </p>
+
+    <section class="laps-section" aria-label="Lap times">
+      <h2>Laps</h2>
+      <ol id="lapList" class="lap-list" aria-live="polite"></ol>
+      <p id="noLaps" class="no-laps">No laps recorded yet.</p>
+    </section>
+  </main>
+
+<script>
+
+function formatTime(ms) {
+  if (!Number.isFinite(ms) || ms < 0) ms = 0;
+  const totalCentis = Math.floor(ms / 10);
+  const centis = totalCentis % 100;
+  const totalSeconds = Math.floor(totalCentis / 100);
+  const seconds = totalSeconds % 60;
+  const totalMinutes = Math.floor(totalSeconds / 60);
+  const minutes = Math.min(totalMinutes, 99);
+  return {
+    minutes: pad2(minutes),
+    seconds: pad2(seconds),
+    centis: pad2(centis),
+    full: `${pad2(minutes)}:${pad2(seconds)}:${pad2(centis)}`
+  };
+}
+
+function pad2(n) {
+  return String(n).padStart(2, '0');
+}
+
+function computeLapDiffs(lapTotals) {
+  const result = [];
+  let prev = 0;
+  for (let i = 0; i < lapTotals.length; i++) {
+    const total = lapTotals[i];
+    result.push({ total, diff: total - prev });
+    prev = total;
+  }
+  return result;
+}
+
+function calcElapsed(accumulatedMs, runStartTimestamp, now) {
+  if (runStartTimestamp === null || runStartTimestamp === undefined) {
+    return accumulatedMs;
+  }
+  return accumulatedMs + (now - runStartTimestamp);
+}
+
+
+(function () {
+  'use strict';
+
+  const STORAGE_KEY = 'neonStopwatch.state.v1';
+
+  let state = loadState() || { accumulatedMs: 0, runStartTimestamp: null, laps: [] };
+
+  const els = {
+    minutes: document.getElementById('minutes'),
+    seconds: document.getElementById('seconds'),
+    centis: document.getElementById('centis'),
+    status: document.getElementById('status'),
+    startPauseBtn: document.getElementById('startPauseBtn'),
+    lapBtn: document.getElementById('lapBtn'),
+    resetBtn: document.getElementById('resetBtn'),
+    lapList: document.getElementById('lapList'),
+    noLaps: document.getElementById('noLaps')
+  };
+
+  let rafId = null;
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (parsed.runStartTimestamp !== null && parsed.runStartTimestamp !== undefined) {
+        const elapsedSincePersist = Date.now() - parsed.persistedAt;
+        parsed.accumulatedMs += Math.max(0, elapsedSincePersist);
+        parsed.runStartTimestamp = Date.now();
+      }
+      return {
+        accumulatedMs: parsed.accumulatedMs || 0,
+        runStartTimestamp: parsed.runStartTimestamp || null,
+        laps: Array.isArray(parsed.laps) ? parsed.laps : []
+      };
+    } catch (e) {
+      console.warn('Could not load stopwatch state:', e);
+      return null;
+    }
+  }
+
+  function saveState() {
+    try {
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({ ...state, persistedAt: Date.now() })
+      );
+    } catch (e) {
+      console.warn('Could not save stopwatch state:', e);
+    }
+  }
+
+  function isRunning() {
+    return state.runStartTimestamp !== null;
+  }
+
+  function getElapsedMs() {
+    return calcElapsed(state.accumulatedMs, state.runStartTimestamp, Date.now());
+  }
+
+  function render() {
+    const t = formatTime(getElapsedMs());
+    els.minutes.textContent = t.minutes;
+    els.seconds.textContent = t.seconds;
+    els.centis.textContent = t.centis;
+    renderLaps();
+  }
+
+  function renderLaps() {
+    els.lapList.innerHTML = '';
+    if (state.laps.length === 0) {
+      els.noLaps.style.display = 'block';
+      return;
+    }
+    els.noLaps.style.display = 'none';
+    const withDiffs = computeLapDiffs(state.laps);
+    for (let i = withDiffs.length - 1; i >= 0; i--) {
+      const { total, diff } = withDiffs[i];
+      const li = document.createElement('li');
+      const idxSpan = document.createElement('span');
+      idxSpan.className = 'lap-index';
+      idxSpan.textContent = `Lap ${i + 1}`;
+      const diffSpan = document.createElement('span');
+      diffSpan.className = 'lap-diff';
+      diffSpan.textContent = formatTime(diff).full;
+      const totalSpan = document.createElement('span');
+      totalSpan.className = 'lap-total';
+      totalSpan.textContent = formatTime(total).full;
+      li.appendChild(idxSpan);
+      li.appendChild(diffSpan);
+      li.appendChild(totalSpan);
+      els.lapList.appendChild(li);
+    }
+  }
+
+  function tick() {
+    render();
+    rafId = requestAnimationFrame(tick);
+  }
+
+  function startTicking() {
+    if (rafId === null) {
+      rafId = requestAnimationFrame(tick);
+    }
+  }
+
+  function stopTicking() {
+    if (rafId !== null) {
+      cancelAnimationFrame(rafId);
+      rafId = null;
+    }
+  }
+
+  function updateButtons() {
+    const running = isRunning();
+    els.startPauseBtn.textContent = running ? 'Pause' : (state.accumulatedMs > 0 ? 'Resume' : 'Start');
+    els.startPauseBtn.setAttribute('aria-label', running ? 'Pause stopwatch' : 'Start stopwatch');
+    els.startPauseBtn.classList.toggle('is-running', running);
+    els.lapBtn.disabled = !running;
+    els.status.textContent = `Stopwatch ${running ? 'running' : 'stopped'} at ${formatTime(getElapsedMs()).full}`;
+  }
+
+  function start() {
+    if (isRunning()) return;
+    state.runStartTimestamp = Date.now();
+    saveState();
+    updateButtons();
+    startTicking();
+  }
+
+  function pause() {
+    if (!isRunning()) return;
+    state.accumulatedMs = getElapsedMs();
+    state.runStartTimestamp = null;
+    saveState();
+    updateButtons();
+    stopTicking();
+    render();
+  }
+
+  function toggleStartPause() {
+    if (isRunning()) {
+      pause();
+    } else {
+      start();
+    }
+  }
+
+  function recordLap() {
+    if (!isRunning()) return;
+    state.laps.push(getElapsedMs());
+    saveState();
+    renderLaps();
+  }
+
+  function reset() {
+    stopTicking();
+    state = { accumulatedMs: 0, runStartTimestamp: null, laps: [] };
+    saveState();
+    render();
+    updateButtons();
+  }
+
+  els.startPauseBtn.addEventListener('click', toggleStartPause);
+  els.lapBtn.addEventListener('click', recordLap);
+  els.resetBtn.addEventListener('click', reset);
+
+  document.addEventListener('keydown', (e) => {
+    const tag = (e.target && e.target.tagName) || '';
+    if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+          
+    if (e.code === 'Space') {
+      e.preventDefault();
+      toggleStartPause();
+    } else if (e.key === 'l' || e.key === 'L') {
+      e.preventDefault();
+      recordLap();
+    } else if (e.key === 'r' || e.key === 'R') {
+      e.preventDefault();
+      reset();
+    }
+  });
+
+  render();
+  updateButtons();
+  if (isRunning()) {
+    startTicking();
+  }
+})();
+</script>
+</body>
+</html>
